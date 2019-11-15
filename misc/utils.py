@@ -278,4 +278,27 @@ def get_std_opt(model, factor=1, warmup=2000):
     #         torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
     return NoamOpt(model.model.tgt_embed[0].d_model, factor, warmup,
             torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
-    
+
+def np_multinomial(batched_props, num_samples):
+    """
+    Faster surrogate for torch.multinomial, API is the same
+    :param batched_props: tensor of bs x dim, every row is a dim-dimensional multinomial distribution
+                        from which num_samples are taken
+    :param num_samples: int
+    :return: tensor of bs x num_samples
+    """
+    norm_probs = (batched_props / batched_props.sum(dim=1).unsqueeze(1)).numpy()
+    result = np.empty((batched_props.shape[0], num_samples), dtype=np.int)
+    length = batched_props.shape[1]
+    for i, probs in enumerate(norm_probs):
+        sample = np.random.choice(length, num_samples, p=probs)
+        result[i] = sample
+    return torch.from_numpy(result)
+
+def stack_multinomial(batched_props, num_samples):
+    norm_probs = (batched_props / batched_props.sum(dim=1).unsqueeze(1)).numpy()
+    length = norm_probs.shape[1]
+    result = np.vstack(
+        tuple(np.random.choice(length, num_samples, p=probs) for probs in norm_probs)
+    )
+    return torch.from_numpy(result).long()
