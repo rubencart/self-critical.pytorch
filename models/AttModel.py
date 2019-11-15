@@ -139,7 +139,7 @@ class AttModel(CaptionModel):
                     #it.index_copy_(0, sample_ind, torch.multinomial(prob_prev, 1).view(-1))
                     # prob_prev = torch.exp(outputs[-1].data) # fetch prev distribution: shape Nx(M+1)
                     prob_prev = torch.exp(outputs[:, i-1].detach()) # fetch prev distribution: shape Nx(M+1)
-                    it.index_copy_(0, sample_ind, torch.multinomial(prob_prev, 1).view(-1).index_select(0, sample_ind))
+                    it.index_copy_(0, sample_ind, utils.np_multinomial(prob_prev, 1).view(-1).index_select(0, sample_ind))
             else:
                 it = seq[:, i].clone()          
             # break if all the sequences end

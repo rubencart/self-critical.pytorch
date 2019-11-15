@@ -66,7 +66,7 @@ class ShowTellModel(CaptionModel):
                         #prob_prev = torch.exp(outputs[-1].data.index_select(0, sample_ind)) # fetch prev distribution: shape Nx(M+1)
                         #it.index_copy_(0, sample_ind, torch.multinomial(prob_prev, 1).view(-1))
                         prob_prev = torch.exp(outputs[-1].data) # fetch prev distribution: shape Nx(M+1)
-                        it.index_copy_(0, sample_ind, torch.multinomial(prob_prev, 1).view(-1).index_select(0, sample_ind))
+                        it.index_copy_(0, sample_ind, utils.np_multinomial(prob_prev, 1).view(-1).index_select(0, sample_ind))
                 else:
                     it = seq[:, i-1].clone()                
                 # break if all the sequences end
@@ -151,7 +151,7 @@ class ShowTellModel(CaptionModel):
                 else:
                     # scale logprobs by temperature
                     prob_prev = torch.exp(torch.div(logprobs.data, temperature)).cpu()
-                it = torch.multinomial(prob_prev, 1).cuda()
+                it = utils.np_multinomial(prob_prev, 1).cuda()
                 sampleLogprobs = logprobs.gather(1, it) # gather the logprobs at sampled positions
                 it = it.view(-1).long() # and flatten indices for downstream processing
 
